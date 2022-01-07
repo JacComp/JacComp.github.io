@@ -1,6 +1,6 @@
 ---
-title: "title"
-author: "name"
+title: "Final Covid-19 Project"
+author: "Jacquelyn Compton"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   prettydoc::html_pretty:
@@ -153,22 +153,22 @@ write_csv(mortality, "./processedData/stateMortality.csv")
 ```
 
 ## Introduction  
-Your introduction
+Throughout this report, there will be data from Covid cases in Michigan. This data includes the amount of cases and deaths by county on a map of Michigan, the amount of cases by county in a line graph, and the cases of three separate counties, also in a line graph. Those counties are Oakland, Presque Isle, and Kalamazoo. 
 
 ## Data  
 The Michigan COVID-19 data for this document were obtained at https://www.michigan.gov/coronavirus/0,9753,7-406-98163_98173---,00.html in the Public Use Datasets called "Cases by County and Date". The **December 29, 2021** dataset was used to create this report. Michigan county populations were found at https://worldpopulationreview.com/us-counties/states/mi which gives the 2018 census numbers. These were the most recent reliable numbers that I could find at the moment.
 
 ## Data munging
-The Michigan COVID-19 dataset had a few peculiarities that needed to be dealt with in order to analyze it easily. There were several "counties" that are not actual Michigan counties that needed to be cleaned. The values for "Out-of-State" are not relevant for my purposes and were removed from the analyses. Likewise, prison populations ("FCI" and "MDOC") cannot be ascribed to particular counties and were, therefore, also removed. Cases with "Unknown" origins were also removed. Finally, the dataset lists "City of Detroit" as a separate entity, those numbers were added back into it's home country (Wayne) to facilitate analysis.
+The Michigan COVID-19 dataset had a few peculiarities that needed to be dealt with in order to analyze it easily. There were several "counties" that are not actual Michigan counties that needed to be cleaned. The values for "Out-of-State" are not relevant for my purposes and were removed from the analyses. Likewise, prison populations ("FCI" and "MDOC") cannot be ascribed to particular counties and were, therefore, also removed. Cases with "Unknown" origins were also removed. Finally, the dataset lists "City of Detroit" as a separate entity, those numbers were added back into it's home county (Wayne) to facilitate analysis.
 
 The number of cases and deaths per day are recorded for both confirmed and probable cases. To be as conservative as possible, these numbers were added together to create a total number of cases and deaths per day from each county (along with total cumulative cases and deaths). These total values, confirmed + probable, are used for all of the analyses in this report.
 
 GIS information was left-joined onto the total data. The census data was also left-joined and used to create population-normalized values (cases or deaths per 100,000 population).
 
 ## Statewide distribution   
-Describe and explain the distribution below
+While there are Covid cases all across Michigan, the area with the largest amount is Southeast Michigan around the Detroit area. This is also the trend for Covid deaths throughout Michigan. Map A shows the amount of cases, and Map B shows the amount of deaths, both by county.
 
-```{r state_map1, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=12, fig.cap="**Figure 1:** Add a legend here"}
+```{r state_map1, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=12, fig.cap="**Figure 1:** Distribution of Covid cases and deaths across the state of Michigan"}
 mapDataA <- michiganTotalData %>% 
   group_by(Region) %>% 
   rename(region = Region) %>% 
@@ -187,20 +187,24 @@ mapB <- county_choropleth(mapDataB, state_zoom = "michigan", num_colors = 1)
 
 ggarrange(mapA, mapB, labels = c("A", "B"), ncol = 1, nrow = 2, font.label = list(size = 28, color = "black", face = "bold", family = NULL))
 ```
+
 ## State Overall Trends
-Using the county maps below as an example, create a figure showing cases for the entire state over time.
+This graph shows the trend of Covid cases in the state of Michigan over time. There are a few spikes in the graph, with each one getting higher. The first is right at the beginning of the pandemic, in late March and early April of 2020, with right around 600-750 cases. The next is in November 2020, where there are around 1000 cases. The third is in April 2021, with around 1500 cases. The final spike began late November 2021 and is still currently rising, with numbers between 2500 and 3000.
 
+```{r state_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=7, fig.cap="**Figure 2:** The monthly amount of cases throughout the entire state of Michigan"}
+ggplot(michiganTotalData, aes(x=Date, y=Cases, color="orchid1")) + geom_line() + scale_x_datetime(breaks = date_breaks("months"), labels = date_format("%b")) + theme(legend.position = "none")
 
+```
 
 ## Comparing Counties
-Select three counties that experienced different COVID incidences and compare them below. Change the vertical lines to delimit the initial outbreak, alpha, delta, and omicron variants.
+The three counties that are included in this report are Oakland, Presque Isle, and Kalamazoo. There are significantly less cases in Presque Isle County than there are in the other two counties.
 
-```{r county_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=7, fig.cap="**Figure 2:** Add a legend here"}
+```{r county_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=7, fig.cap="**Figure 3:** The monthly amount of Covid cases in Oakland County, Presque Isle County, and Kalamazoo County"}
 counties <- michiganTotalData %>% 
-  filter(County == "isabella" | County == "mecosta" | County == "ottawa")
+  filter(County == "oakland" | County == "presque isle" | County == "kalamazoo")
 ggplot(counties, aes(x=Date, y=Cases, color=County, fill=County)) +
-  scale_color_manual(values=c('mecosta'="firebrick", 'isabella'="dodgerblue", 'ottawa'="steelblue")) +
-  scale_fill_manual(legend, values=c('mecosta'="firebrick", 'isabella'="dodgerblue", 'ottawa'="steelblue")) +
+  scale_color_manual(values=c('oakland'="darkorchid", 'presque isle'="navy", 'kalamazoo'="salmon")) +
+  scale_fill_manual(legend, values=c('oakland'="darkorchid", 'presque isle'="navy", 'kalamazoo'="salmon")) +
   scale_x_datetime(breaks = date_breaks("months"),labels = date_format("%b")) +
   geom_bar(stat = "identity") +
   geom_ma(ma_fun = EMA, n = 7, wilder = TRUE, linetype = 1, size = 2) +
@@ -212,12 +216,12 @@ ggplot(counties, aes(x=Date, y=Cases, color=County, fill=County)) +
         axis.title=element_text(size=18,face="bold"))
 ```
 
-```{r weekly_county_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=7, fig.cap="**Figure 6:** A comparison of the number of total cases in Isabella, Mecosta, and Ottawa counties by week. The bars indicate total daily cases and the lines are four-week moving averages." }
+```{r weekly_county_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=7, fig.cap="**Figure 4:** A comparison of the number of total cases in Oakland, Presque Isle, and Kalamazoo counties by week. The bars indicate total daily cases and the lines are four-week moving averages." }
 counties <- weekly %>% 
-  filter(County == "isabella" | County == "mecosta" | County == "ottawa")
+  filter(County == "oakland" | County == "presque isle" | County == "kalamazoo")
 ggplot(counties, aes(x=Week, y=Weekly.Cases, color=County, fill=County)) +
-    scale_color_manual(values=c('mecosta'="firebrick", 'isabella'="dodgerblue", 'ottawa'="steelblue")) +
-  scale_fill_manual(legend, values=c('mecosta'="firebrick", 'isabella'="dodgerblue", 'ottawa'="steelblue")) +
+    scale_color_manual(values=c('oakland'="darkorchid", 'presque isle'="navy", 'kalamazoo'="salmon")) +
+  scale_fill_manual(legend, values=c('oakland'="darkorchid", 'presque isle'="navy", 'kalamazoo'="salmon")) +
   geom_bar(stat = "identity") +
   geom_ma(ma_fun = EMA, n = 4, wilder = TRUE, linetype = 1, size = 2) +
   facet_grid(rows=vars(County), scales="free_y") +
@@ -228,9 +232,9 @@ ggplot(counties, aes(x=Week, y=Weekly.Cases, color=County, fill=County)) +
 ```
 
 ## Conclusions  
-Conclusions go here.
+Throughout the history of Covid-19 (since March 2020), Michigan has had ups and downs with the amount of existing cases. You can see these trends in Figure 2 with the entire state, and you can see it with the separate counties. Another common trend you can see with the entire state and the separate counties is that this current time is the highest spike there's been in Michigan. 
 
 ## References
-Any references here.
+No extra references were used.
 
 
